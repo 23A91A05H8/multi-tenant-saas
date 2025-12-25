@@ -1,16 +1,12 @@
-import dotenv from 'dotenv';
 import pkg from 'pg';
-
-dotenv.config(); // 🔴 THIS WAS MISSING
-
 const { Pool } = pkg;
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+export const pool = new Pool({
+  host: process.env.DB_HOST || 'database',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'saas_db',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
 });
 
 export const connectDB = async () => {
@@ -23,5 +19,3 @@ export const connectDB = async () => {
     return false;
   }
 };
-
-export default pool;
