@@ -1,23 +1,38 @@
+import { initDatabase } from './config/initDb.js';
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+
 import pool, { connectDB } from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 
-dotenv.config();
 
-const app = express();
+const app = express(); // ✅ app MUST be created first
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
+// Routes
+app.use('/api/auth', authRoutes);
+
+// DB status
 let dbStatus = 'not_connected';
 
 // Connect DB on startup
 (async () => {
-  const connected = await connectDB();
-  dbStatus = connected ? 'connected' : 'not_connected';
+  try {
+    await initDatabase();
+    app.listen(5000, () => {
+      console.log('Backend running on port 5000');
+    });
+  } catch (err) {
+    console.error('Failed to initialize database');
+    process.exit(1);
+  }
 })();
 
+// Health check
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
