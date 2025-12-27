@@ -5,6 +5,8 @@ import cors from 'cors';
 
 import pool, { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import tenantRoutes from './routes/tenantRoutes.js';
+
 
 
 const app = express(); // ✅ app MUST be created first
@@ -15,6 +17,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/tenants', tenantRoutes);
 
 // DB status
 let dbStatus = 'not_connected';

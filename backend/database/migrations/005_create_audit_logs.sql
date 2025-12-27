@@ -18,3 +18,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
       REFERENCES users(id)
       ON DELETE SET NULL
 );
+
+
+
+
