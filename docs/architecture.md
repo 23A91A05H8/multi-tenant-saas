@@ -1,132 +1,131 @@
-# System Architecture Document
-## Multi-Tenant SaaS Platform – Project & Task Management System
+# System Architecture
+
+## Overview
+
+This project follows a **multi-tenant SaaS architecture** where a single application instance serves multiple tenants while maintaining strict data isolation and security.
+
+The system is divided into three major layers:
+- Frontend (Client)
+- Backend (API Server)
+- Database (PostgreSQL)
+
+Each request is authenticated using JWT, and tenant context is enforced at the backend layer.
 
 ---
 
-## 1. System Architecture Overview
+## High-Level Architecture Diagram
 
-The system follows a three-tier architecture consisting of a frontend client, backend API server, and a relational database. Docker is used to containerize and orchestrate all services.
-
-### Components:
-- **Client (Browser):** Accessed by users via web browser
-- **Frontend:** React-based UI for interaction
-- **Backend:** Node.js + Express REST API
-- **Database:** PostgreSQL for persistent storage
-- **Authentication:** JWT-based stateless authentication
-
-### Architecture Flow:
-1. User interacts with the frontend
-2. Frontend sends API requests to backend
-3. Backend validates JWT and role permissions
-4. Backend queries PostgreSQL with tenant isolation
-5. Response returned to frontend
+![System Architecture](./images/architecture-diagram.png)
 
 ---
 
-## 2. System Architecture Diagram
+## Architecture Components
 
-The diagram below represents the high-level system architecture.
+### 1. Frontend (React)
 
-**Diagram Location:**  
-`docs/images/system-architecture.png`
+The frontend is a React-based web application responsible for:
+- User login and authentication
+- Dashboard rendering
+- Making authenticated API requests
+- Managing user interactions
 
-**Description:**
-- Browser communicates with frontend
-- Frontend communicates with backend API
-- Backend communicates with PostgreSQL database
-- JWT used for authentication
-- Tenant isolation enforced at API level
-
-*(Diagram will be added as an image file)*
+The frontend stores the JWT token securely and sends it with every API request.
 
 ---
 
-## 3. Database Schema Design (ERD)
+### 2. Backend (Node.js + Express)
 
-The database schema is designed to enforce tenant isolation and data integrity.
+The backend acts as the central control layer:
+- Handles authentication and authorization
+- Enforces tenant isolation
+- Applies role-based access control (RBAC)
+- Enforces subscription limits
+- Communicates with PostgreSQL
 
-### Core Tables:
-- tenants
-- users
-- projects
-- tasks
-- audit_logs
-
-Each table (except super_admin users) includes a `tenant_id` column.
-
-**ERD Diagram Location:**  
-`docs/images/database-erd.png`
-
-**Design Highlights:**
-- Foreign keys with CASCADE delete
-- Indexes on tenant_id for performance
-- Composite unique constraint on (tenant_id, email)
-
-*(ERD diagram will be added as an image file)*
+Middleware layers ensure:
+- JWT validation
+- Tenant context injection
+- Role checks (`super_admin`, `tenant_admin`, `user`)
 
 ---
 
-## 4. API Architecture
+### 3. Database (PostgreSQL)
+
+PostgreSQL stores all application data:
+- Tenants
+- Users
+- Projects
+- Tasks
+- Audit logs
+
+Tenant isolation is achieved using a `tenant_id` foreign key across all tenant-specific tables.
+
+---
+
+## Authentication & Authorization Flow
+
+1. User logs in with credentials
+2. Backend validates credentials
+3. JWT token is generated with:
+   - userId
+   - tenant_Id
+   - role
+4. Token is sent to frontend
+5. Frontend sends token with every request
+6. Backend middleware validates token and enforces access rules
+
+---
+
+## Subscription Enforcement Flow
+
+Before creating resources:
+- Backend checks tenant limits (`max_projects`, `max_users`)
+- Current usage is calculated
+- If limit exceeded → request blocked with **403 Forbidden**
+
+---
+
+## API Structure Overview
 
 ### Authentication APIs
-- POST /api/auth/register-tenant (Public)
-- POST /api/auth/login (Public)
-- GET /api/auth/me (Authenticated)
-- POST /api/auth/logout (Authenticated)
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `POST /api/auth/logout`
 
-### Tenant Management APIs
-- GET /api/tenants/:tenantId (Authenticated)
-- PUT /api/tenants/:tenantId (Tenant Admin / Super Admin)
-- GET /api/tenants (Super Admin only)
+### Tenant APIs (Super Admin)
+- `GET /api/tenants`
+- `GET /api/tenants/:id`
+- `PUT /api/tenants/:id`
 
-### User Management APIs
-- POST /api/tenants/:tenantId/users (Tenant Admin)
-- GET /api/tenants/:tenantId/users (Authenticated)
-- PUT /api/users/:userId (Authenticated)
-- DELETE /api/users/:userId (Tenant Admin)
+### User APIs
+- `POST /api/tenants/:id/users`
+- `GET /api/tenants/:id/users`
+- `PUT /api/users/:id`
 
-### Project Management APIs
-- POST /api/projects (Authenticated)
-- GET /api/projects (Authenticated)
-- PUT /api/projects/:projectId (Tenant Admin / Creator)
-- DELETE /api/projects/:projectId (Tenant Admin / Creator)
+### Project APIs
+- `GET /api/projects`
+- `POST /api/projects`
+- `PUT /api/projects/:id`
+- `DELETE /api/projects/:id`
 
-### Task Management APIs
-- POST /api/projects/:projectId/tasks (Authenticated)
-- GET /api/projects/:projectId/tasks (Authenticated)
-- PATCH /api/tasks/:taskId/status (Authenticated)
-- PUT /api/tasks/:taskId (Authenticated)
+### Task APIs
+- `GET /api/projects/:id/tasks`
+- `POST /api/projects/:id/tasks`
+- `PUT /api/tasks/:id`
+- `DELETE /api/tasks/:id`
 
 ---
 
-## 5. Authentication & Authorization Flow
+## UI Screenshots
 
-- Users authenticate using email, password, and tenant subdomain
-- Backend issues JWT containing:
-  - userId
-  - tenantId
-  - role
-- JWT is sent in Authorization header for all protected APIs
-- Role-based middleware checks permissions
-- Tenant isolation middleware filters data by tenant_id
+### Login Page
+![Login](./images/login.png)
+
+### Dashboard Page
+![Dashboard](./images/dashboard.png)
 
 ---
 
-## 6. Multi-Tenancy Enforcement Strategy
+## Conclusion
 
-- tenant_id is extracted from JWT token
-- All database queries are filtered using tenant_id
-- Super admin role bypasses tenant filter
-- Client is never allowed to send tenant_id in request body
-
----
-
-## 7. Audit Logging
-
-All critical actions such as CREATE, UPDATE, and DELETE are logged in the audit_logs table with:
-- tenant_id
-- user_id
-- action
-- entity_type
-- entity_id
-- timestamp
+This architecture ensures scalability, security, and maintainability while demonstrating real-world SaaS design principles such as multi-tenancy, RBAC, and subscription enforcement.

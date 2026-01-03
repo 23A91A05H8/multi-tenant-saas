@@ -130,3 +130,25 @@ if (user.role === 'super_admin') {
     });
   }
 };
+
+
+export const me = async (req, res) => {
+  try {
+    // user is attached by authenticate middleware
+    res.json({
+      success: true,
+      data: req.user,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to fetch user" });
+  }
+};
+
+export const logout = async (req, res) => {
+  // JWT logout is handled client-side by deleting token
+  res.json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
+

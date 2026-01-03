@@ -125,13 +125,15 @@ export const registerTenant = async (req, res) => {
     // 9. Commit transaction
     await client.query('COMMIT');
 
-    return res.status(201).json({
-      success: true,
-      data: {
-        tenantId,
-        adminUserId,
-      },
-    });
+   res.status(201).json({
+  success: true,
+  message: 'Tenant registered successfully',
+  data: {
+    tenantId,
+    adminUserId,
+  },
+});
+
   } catch (error) {
   console.error('TENANT REGISTER ERROR:', error);
 
@@ -144,6 +146,9 @@ finally {
     client.release();
   }
 };
+
+
+
 
 
 

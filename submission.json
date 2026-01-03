@@ -1,0 +1,11 @@
+{
+  "super_admin": {
+    "email": "superadmin@system.com",
+    "password": "Admin@123"
+  },
+  "tenant_admin": {
+    "email": "admin@demo.com",
+    "password": "Demo@123",
+    "tenantSubdomain": "demo"
+  }
+}
